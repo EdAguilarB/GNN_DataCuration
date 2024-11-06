@@ -254,11 +254,7 @@ def network_report(log_dir,
     return 'Report saved in {}'.format(log_dir)
 
 
-import os
-import re
-import numpy as np
-from collections import defaultdict
-from icecream import ic
+
 
 def network_outer_report(log_dir: str, outer: int, folds: int, threshold: float = 30.0):
     accuracy, precision, recall, r2, mae, rmse = [], [], [], [], [], []
@@ -310,9 +306,7 @@ def network_outer_report(log_dir: str, outer: int, folds: int, threshold: float 
                     ic(index)
                     if error > threshold:  # Use threshold parameter to filter errors
                         outlier_counts[index] += 1
-                        ic(outlier_counts[index])
 
-    ic(outlier_counts)  # To verify final counts across folds
 
     # Calculate mean and standard deviation for each metric
     accuracy_mean = np.mean(accuracy)
@@ -347,6 +341,43 @@ def network_outer_report(log_dir: str, outer: int, folds: int, threshold: float 
             file1.write(f"Index {index}: {count} times\n")
 
     return f'Report saved in {report_path}'
+
+
+def aggregate_outliers(opt):
+    # Initialize dictionary to store outlier counts across all folds
+    aggregated_outlier_counts = defaultdict(int)
+
+    # Pattern for the outliers section (matching "Index X: Y times")
+    outlier_pattern = re.compile(r"Index (\d+): (\d+) times")
+
+    # Iterate through each fold's report file
+    files = [f"{opt.log_dir_results}/{opt.filename[:-4]}/learning/results_GNN/Fold_{outer}_test_set/performance_outer_test_fold{outer}.txt" 
+             for outer in range(1, opt.folds+1)]
+
+    for file_path in files:
+        if os.path.exists(file_path):
+            with open(file_path, 'r') as f:
+                content = f.read()
+            
+            # Extract outlier counts from each file
+            for match in outlier_pattern.finditer(content):
+                ic(match)
+                index = int(match.group(1))
+                count = int(match.group(2))
+                aggregated_outlier_counts[index] += count
+
+    # Define the path for the aggregated outlier report
+    aggregated_report_path = f"{opt.log_dir_results}/{opt.filename[:-4]}/learning/results_GNN/aggregated_outliers.txt"
+
+    # Write the aggregated counts to a new summary file
+    with open(aggregated_report_path, "w") as file:
+        file.write("Aggregated Outliers:\n")
+        for index, count in sorted(aggregated_outlier_counts.items()):
+            if count >= 5:
+                file.write(f"Index {index}: {count} times\n")
+    
+    return f'Aggregated outliers report saved in {aggregated_report_path}'
+
 
 def extract_metrics(file):
 
@@ -386,7 +417,7 @@ def extract_metrics(file):
 
     return metrics
 
-    
+
 
 def split_data(df:pd.DataFrame):
 
