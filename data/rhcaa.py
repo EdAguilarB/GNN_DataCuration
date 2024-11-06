@@ -80,9 +80,6 @@ class rhcaa_diene(reaction_graph):
                         edge_attr=edge_attr_reaction, 
                         y=y,
                         top = top,
-                        ligand = standardize_smiles(reaction['Ligand']),
-                        substrate = standardize_smiles(reaction['substrate']),
-                        boron = standardize_smiles(reaction['boron reagent']),
                         idx = index,
                         fold = fold
                         ) 
@@ -102,17 +99,28 @@ class rhcaa_diene(reaction_graph):
             # Feature 1: Atomic number        
             node_feats += self._one_h_e(atom.GetSymbol(), self._elem_list)
             # Feature 2: Atom degree
-            node_feats += self._one_h_e(atom.GetDegree(), [1, 2, 3, 4])
+            node_feats += self._one_h_e(atom.GetDegree(), [0,  1, 2, 3, 4, 5, 6])
             # Feature 3: Hybridization
-            node_feats += self._one_h_e(atom.GetHybridization(), [0,2,3,4])
+            node_feats += self._one_h_e(atom.GetHybridization(), [Chem.rdchem.HybridizationType.S,
+                                                                  Chem.rdchem.HybridizationType.SP,
+                                                                  Chem.rdchem.HybridizationType.SP2,
+                                                                  Chem.rdchem.HybridizationType.SP3,
+                                                                  Chem.rdchem.HybridizationType.SP3D,],
+                                                                  Chem.rdchem.HybridizationType.UNSPECIFIED,)
             # Feature 4: Aromaticity
             node_feats += [atom.GetIsAromatic()]
             # Feature 5: In Ring
             node_feats += [atom.IsInRing()]
             # Feature 6: Chirality
-            node_feats += self._one_h_e(self._get_atom_chirality(CIPtuples, atom.GetIdx()), ['R', 'S'], 'No_Stereo_Center')
-            #feature 7: ligand configuration
-            if reactant == 'Ligand':
+            node_feats += self._one_h_e(atom.GetChiralTag(), [Chem.rdchem.ChiralType.CHI_TETRAHEDRAL_CW, 
+                                                              Chem.rdchem.ChiralType.CHI_TETRAHEDRAL_CCW, 
+                                                              ],
+                                                              Chem.rdchem.ChiralType.CHI_UNSPECIFIED)
+            # Feature 7: Formal Charge
+            node_feats += self._one_h_e(atom.GetFormalCharge(), [-1, 0, 1])
+            
+            #feature 8: ligand configuration
+            if reactant == 'ligand':
                 node_feats += self._one_h_e(mol_confg, [2, 1], 0)
             else:
                 node_feats += [0,0]
