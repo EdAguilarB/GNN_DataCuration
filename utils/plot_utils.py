@@ -49,6 +49,7 @@ def create_st_parity_plot(real, predicted, figure_name, save_path=None):
         plt.savefig(save_path, bbox_inches='tight')
 
     plt.close()
+    plt.clf()
 
     
 
@@ -141,6 +142,7 @@ def plot_tsne_with_subsets(data_df, feature_columns, color_column, set_column, f
         plt.show()
 
     plt.close()
+    plt.clf()
 
 def create_training_plot(df, save_path):
 
@@ -171,6 +173,7 @@ def create_training_plot(df, save_path):
     plt.savefig('{}/loss_vs_epochs.png'.format(save_path), bbox_inches='tight')
 
     plt.close()
+    plt.clf()
 
 
 def create_bar_plot(means:tuple, stds:tuple, min:float, max:float, metric:str, save_path:str, tml_algorithm:str):
@@ -244,6 +247,7 @@ def create_violin_plot(data, save_path:str):
 
     plt.savefig(os.path.join(save_path, f'Error_distribution_GNN_vs_TML_violin_plot'), dpi=300, bbox_inches='tight')
     plt.close()
+    plt.clf()
 
 
 def create_strip_plot(data, save_path:str):
@@ -259,6 +263,7 @@ def create_strip_plot(data, save_path:str):
 
     plt.savefig(os.path.join(save_path, f'Error_distribution_GNN_vs_TML_strip_plot'), dpi=300, bbox_inches='tight')
     plt.close()
+    plt.clf()
 
 def create_parity_plot(data: pd.DataFrame, save_path:str, tml_algorithm:str):
 
@@ -293,6 +298,7 @@ def create_parity_plot(data: pd.DataFrame, save_path:str, tml_algorithm:str):
 
     plt.savefig(os.path.join(save_path, f'parity_plot_GNN'), dpi=300, bbox_inches='tight')
     plt.close()
+    plt.clf()
     
 
     results_tml = data[data['Method'] == tml_algorithm]
@@ -323,28 +329,10 @@ def create_parity_plot(data: pd.DataFrame, save_path:str, tml_algorithm:str):
 
     plt.savefig(os.path.join(save_path, f'parity_plot_{tml_algorithm}'), dpi=300, bbox_inches='tight')
     plt.close()
+    plt.clf()
 
 
 
-def plot_importances(df, save_path: str=None):
-    plt.figure(figsize=(10, 6))
-
-    ax = barplot(df, x="score", y="labels", estimator="sum", errorbar=None)
-    ax.bar_label(ax.containers[0], fontsize=10)
-    # ax.set_yticklabels(ax.get_yticklabels(), verticalalignment='center', horizontalalignment='right')
-
-    plt.xlabel('Feature Importance Score', fontsize=16)
-    plt.ylabel('Feature', fontsize=16)
-
-    if save_path:
-        # Save the figure before displaying it
-        plt.savefig(os.path.join(save_path, 'node_feature_importance_plot'), dpi=300, bbox_inches='tight')
-
-    # Display the plot
-    plt.show()
-
-    print('Node feature importance plot has been saved in the directory {}'.format(save_path))
-    plt.close()
 
 
 
@@ -436,34 +424,34 @@ def plot_distribution(df):
     plt.show()
 
 
-def parity_mean(df, save_path: str=None):
+def parity_mean(df, save_path: str=None, opt=None):
 
 # Create the parity plot
     plt.figure(figsize=(12, 10))
     sns.set(style="whitegrid")
 
     # Scatter plot with hue for different methods
-    scatter = sns.scatterplot(x='real_ddG', y='mean_predicted_ddG', data=df, s=100, edgecolor='k', palette='deep')
+    scatter = sns.scatterplot(x='real_ddG', y=f'median_predicted_ddG', data=df, s=100, edgecolor='k', palette='deep')
 
     # Add regression lines for each method and calculate metrics
     metrics_text = []
 
-    sns.regplot(x='real_ddG', y='mean_predicted_ddG', data=df, scatter=False, ci=None, label=f'Regression {df}', line_kws={'linestyle': '--'})
+    sns.regplot(x=f'real_ddG', y=f'median_predicted_ddG', data=df, scatter=False, ci=None, label=f'Regression {df}', line_kws={'linestyle': '--'})
     
     # Calculate R2 and MAE
-    r2 = r2_score(df['real_ddG'], df['mean_predicted_ddG'])
-    mae = mean_absolute_error(df['real_ddG'], df['mean_predicted_ddG'])
-    rmse = sqrt(mean_squared_error(df['real_ddG'], df['mean_predicted_ddG']))
+    r2 = r2_score(df['real_ddG'], df[f'median_predicted_ddG'])
+    mae = mean_absolute_error(df['real_ddG'], df[f'median_predicted_ddG'])
+    rmse = sqrt(mean_squared_error(df['real_ddG'], df[f'median_predicted_ddG']))
     metrics_text.append(f"$R^2$: {r2:.2f}, MAE: {mae:.2f}, RMSE: {rmse:.2f}")
 
     # Line of equality
-    max_val = max(df['real_ddG'].max(), df['mean_predicted_ddG'].max())
-    min_val = min(df['real_ddG'].min(), df['mean_predicted_ddG'].min())
+    max_val = max(df[f'real_ddG'].max(), df[f'median_predicted_ddG'].max())
+    min_val = min(df[f'real_ddG'].min(), df[f'median_predicted_ddG'].min())
     plt.plot([min_val, max_val], [min_val, max_val], 'k-', linewidth=2, label='Line of Equality')
 
     # Titles and labels
-    plt.xlabel('Real ΔΔG$^{\u2021}$ / kJ $mol^{-1}$', fontsize=32)
-    plt.ylabel('Mean Predicted ΔΔG$^{\u2021}$ / kJ $mol^{-1}$', fontsize=32)
+    plt.xlabel('Real %top', fontsize=32)
+    plt.ylabel('Mean %top', fontsize=32)
 
     # Enhancing the overall look
     plt.xticks(fontsize=30)
