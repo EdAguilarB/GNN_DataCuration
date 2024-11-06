@@ -38,14 +38,14 @@ class BaseOptions:
         self.parser.add_argument(
             '--root', 
             type=str, 
-            default='data/datasets/rhcaa/',
+            default='data/datasets/biaryl/',
             help='path to the folder containing the csv files',
             )
         
         self.parser.add_argument(
             '--filename',
             type=str,
-            default='rhcaa.csv',
+            default='biaryl.csv',
             help='name of the csv file',
             )
         
@@ -75,7 +75,7 @@ class BaseOptions:
         self.parser.add_argument(
             '--mol_cols',
             type=str,
-            default=['Ligand', 'substrate', 'boron reagent'],
+            default=['ligand', 'substrate', 'boronreagent'],
             help='column names of the reactant and product smiles',
             )
         
@@ -96,7 +96,7 @@ class BaseOptions:
         self.parser.add_argument(
             '--graph_features',
             type=dict,
-            default={'Confg': ['Ligand'],
+            default={'Confg': ['ligand'],
                      'Temp': ['all'],
                      }
                      ,
