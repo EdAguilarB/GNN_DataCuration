@@ -20,7 +20,7 @@ def plot_results(exp_dir, opt):
     r2_gnn, mae_gnn, rmse_gnn = [], [], []
     accuracy_gnn, precision_gnn, recall_gnn = [], [], []
 
-    results_all = pd.DataFrame(columns = ['index', 'Test_Fold', 'Val_Fold', 'Method', 'real_ddG', 'predicted_ddG'])
+    results_all = pd.DataFrame(columns = ['index', 'Test_Fold', 'Val_Fold', 'Method', f'real_{opt.target_var}', f'predicted_{opt.target_var}'])
     
     for outer in range(1, opt.folds+1):
 
@@ -53,7 +53,7 @@ def plot_results(exp_dir, opt):
     save_dir = f'{exp_dir}/GNN_performance'
     os.makedirs(save_dir, exist_ok=True)
 
-    results_all['Error'] = results_all['real_ddG'] - results_all['predicted_ddG']
+    results_all['Error'] = results_all[f'real_{opt.target_var}'] - results_all[f'predicted_{opt.target_var}']
     
 
 
@@ -68,17 +68,19 @@ def plot_results(exp_dir, opt):
     print('\n')
 
     gnn_predictions = gnn_predictions.groupby(['index', 'Method']).agg(
-    real_ddG=('real_ddG', 'first'),
-    mean_predicted_ddG=('predicted_ddG', 'mean'),
-    std_predicted_ddG=('predicted_ddG', 'std'),  
+    real_ddG=(f'real_{opt.target_var}', 'first'),
+    median_predicted_ddG=(f'predicted_{opt.target_var}', 'mean'),
+    std_predicted_ddG=(f'predicted_{opt.target_var}', 'std'),  
     ).reset_index(
     )
 
-    parity_mean(df=gnn_predictions, save_path=save_dir)
-    plot_error_distribution(df=gnn_predictions, save_path=save_dir)
+    gnn_predictions.to_csv(f'{save_dir}/predictions_median.csv', index=False)
+
+    parity_mean(df=gnn_predictions, save_path=save_dir, opt=opt)
+    #plot_error_distribution(df=gnn_predictions, save_path=save_dir)
 
 
 if __name__ == '__main__':
     opt = BaseOptions().parse()
-    exp_dir = os.path.join(opt.log_dir_results, opt.filename[:-4], 'test')
+    exp_dir = os.path.join(opt.log_dir_results, opt.filename[:-4], 'learning')
     plot_results(exp_dir, opt)
